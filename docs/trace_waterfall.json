@@ -1,29 +1,40 @@
 [
   {
     "step": 1,
-    "query": "Chào bạn, bạn có thể giới thiệu quy chế học vụ cơ bản của Đại học VinUni không?",
-    "action_type": "FINAL_ANSWER",
-    "thought": "Câu hỏi chung về quy chế học vụ, trả lời trực tiếp không cần gọi Tool.",
-    "output": "[Mock Agent Response]: Xin chào! Quy chế học vụ VinUni yêu cầu sinh viên tích lũy tối thiểu 120 tín chỉ và duy trì GPA trên 2.0 để tốt nghiệp.",
-    "latency_ms": 2845.93
-  },
-  {
-    "step": 1,
-    "query": "Hãy tra cứu thông tin học vụ của sinh viên SV2026001.",
+    "query": "e01",
     "action_type": "TOOL_EXECUTION",
-    "tool_name": "academic_query",
+    "tool_name": "bus_route_query",
     "arguments": {
-      "student_id": "SV2026001"
+      "route_id": "E01"
     },
-    "observation": {},
-    "latency_ms": 799.12
+    "observation": {
+      "status": "SUCCESS",
+      "route_id": "E01",
+      "data": {
+        "route_name": "Tuyến E01: Bến xe Mỹ Đình - Vinhomes Ocean Park",
+        "departure": "Bến xe Mỹ Đình",
+        "destination": "Vinhomes Ocean Park (Gia Lâm)",
+        "operating_hours": "05:00 - 22:30 hàng ngày",
+        "frequency": "15 - 20 phút / chuyến",
+        "ticket_price_single": "8.000 VNĐ",
+        "ticket_price_monthly": "100.000 VNĐ (Ưu đãi HS/SV) / 200.000 VNĐ (Phổ thông)",
+        "stops": [
+          "Bến xe Mỹ Đình",
+          "Cầu Giấy",
+          "Kim Mã",
+          "Nguyễn Văn Cừ",
+          "Vinhomes Ocean Park"
+        ]
+      }
+    },
+    "latency_ms": 734.04
   },
   {
     "step": 2,
-    "query": "Hãy tra cứu thông tin học vụ của sinh viên SV2026001.",
+    "query": "e01",
     "action_type": "FINAL_ANSWER",
-    "thought": "Tổng hợp kết quả từ MCP Server thành công.",
-    "output": "Chưa thể trả lời chi tiết do chưa nhận được dữ liệu từ MCP Server (hãy hoàn thành TODO 2.1).",
+    "thought": "Tổng hợp thông tin dịch vụ VinBus thành công.",
+    "output": "Thông tin Tuyến E01: Bến xe Mỹ Đình - Vinhomes Ocean Park:\n- Điểm đầu/cuối: Bến xe Mỹ Đình ➡️ Vinhomes Ocean Park (Gia Lâm)\n- Giờ hoạt động: 05:00 - 22:30 hàng ngày | Tần suất: 15 - 20 phút / chuyến\n- Giá vé: Lượt 8.000 VNĐ | Tháng: 100.000 VNĐ (Ưu đãi HS/SV) / 200.000 VNĐ (Phổ thông)\n- Các điểm dừng chính: Bến xe Mỹ Đình, Cầu Giấy, Kim Mã, Nguyễn Văn Cừ, Vinhomes Ocean Park.",
     "latency_ms": 10.0
   }
 ]

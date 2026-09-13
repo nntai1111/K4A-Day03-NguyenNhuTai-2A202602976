@@ -1,0 +1,37 @@
+[
+  {
+    "id": "TC01",
+    "type": "direct_query",
+    "question": "Chào bạn, xe bus điện VinBus có những ưu điểm gì và cách thức thanh toán vé lượt như thế nào?",
+    "expected_behavior": "Chatbot trả lời trực tiếp từ kiến thức chung/System Prompt mà không cần gọi Tool.",
+    "complexity": "Low"
+  },
+  {
+    "id": "TC02",
+    "type": "single_tool_query",
+    "question": "Hãy tra cứu lộ trình, điểm dừng và thời gian hoạt động của tuyến xe bus điện VinBus E01.",
+    "expected_behavior": "Agent tự động kích hoạt Tool 'bus_route_query' với route_id='E01'.",
+    "complexity": "Medium"
+  },
+  {
+    "id": "TC03",
+    "type": "appointment_booking",
+    "question": "Tôi muốn đăng ký vé tháng tuyến E01 cho hành khách Nguyễn Văn An, SĐT 0912345678, đối tượng Học sinh/Sinh viên từ tháng 10/2026.",
+    "expected_behavior": "Agent kích hoạt Tool 'register_monthly_pass' với đầy đủ thông tin đăng ký.",
+    "complexity": "Medium"
+  },
+  {
+    "id": "TC04",
+    "type": "multi_step_reasoning",
+    "question": "Tôi muốn đi từ Mỹ Đình đến Vinhomes Ocean Park. Hãy tìm tuyến xe phù hợp và đăng ký vé tháng tuyến đó cho tôi (Tên: Trần Thị Bình, SĐT: 0987654321, Phổ thông).",
+    "expected_behavior": "Agent suy luận đa bước: Gọi 'bus_route_query' tìm tuyến phù hợp trước, sau đó dùng kết quả thu được để gọi 'register_monthly_pass'.",
+    "complexity": "High"
+  },
+  {
+    "id": "TC05",
+    "type": "edge_case_handling",
+    "question": "Hãy tra cứu thông tin lộ trình của tuyến xe bus VinBus E999.",
+    "expected_behavior": "Agent nhận kết quả NOT_FOUND từ Tool và phản hồi lịch sự, không tự bịa thông tin tuyến xe.",
+    "complexity": "Medium"
+  }
+]

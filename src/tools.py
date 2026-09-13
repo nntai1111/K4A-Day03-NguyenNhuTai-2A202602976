@@ -12,20 +12,21 @@ from typing import Dict, Any
 
 TOOLS_SCHEMA = [
     # Tool 1: Đã được định nghĩa mẫu sẵn cho Học viên tham khảo
-    {
-        "name": "academic_query",
-        "description": "Tra cứu hồ sơ và thông tin học vụ của sinh viên VinUni bằng mã sinh viên.",
+      {
+        "name": "bus_route_query",
+        "description": "Tra cứu lộ trình, điểm đầu cuối, danh sách điểm dừng chính, giờ hoạt động và tần suất của tuyến xe bus điện VinBus.",
         "parameters": {
             "type": "object",
             "properties": {
-                "student_id": {
+                "route_id": {
                     "type": "string",
-                    "description": "Mã sinh viên cần tra cứu (ví dụ: 'SV2026001')"
+                    "description": "Mã tuyến xe bus điện VinBus (ví dụ: 'E01', 'E02', 'E03')"
                 }
             },
-            "required": ["student_id"]
+            "required": ["route_id"]
         }
     },
+    
     
     # --------------------------------------------------------------------------
     # TODO 1.2: HỌC VIÊN HOÀN THIỆN TOOL SCHEMA CHO 'schedule_appointment'
@@ -37,75 +38,122 @@ TOOLS_SCHEMA = [
     #    - advisor_name (string): Tên cố vấn học tập
     # 3. Khai báo danh sách các trường bắt buộc (required).
     # --------------------------------------------------------------------------
-    {
-        "name": "schedule_appointment",
-        "description": "Đặt lịch hẹn tư vấn học vụ với Cố vấn học tập VinUni.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                # TODO 1.2: Khai báo các thuộc tính tham số cho Tool tại đây...
-            },
-            "required": [] # TODO 1.2: Khai báo danh sách các trường bắt buộc tại đây...
+
+    # Tool 2: Đăng ký vé tháng xe bus điện VinBus
+        {
+            "name": "register_monthly_pass",
+            "description": "Đăng ký vé tháng xe bus điện VinBus cho hành khách (ưu đãi cho sinh viên, người cao tuổi, phổ thông).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "passenger_name": {
+                        "type": "string",
+                        "description": "Họ và tên đầy đủ của hành khách đăng ký"
+                    },
+                    "phone_number": {
+                        "type": "string",
+                        "description": "Số điện thoại liên hệ của hành khách"
+                    },
+                    "route_id": {
+                        "type": "string",
+                        "description": "Mã tuyến xe bus điện đăng ký vé tháng (ví dụ: 'E01', 'E02', 'Tất cả các tuyến')"
+                    },
+                    "pass_type": {
+                        "type": "string",
+                        "description": "Đối tượng đăng ký: 'Học sinh/Sinh viên', 'Người cao tuổi', 'Tập thể', 'Phổ thông'"
+                    },
+                    "start_month": {
+                        "type": "string",
+                        "description": "Tháng bắt đầu áp dụng vé tháng (ví dụ: '10/2026')"
+                    }
+                },
+                "required": ["passenger_name", "phone_number", "route_id", "pass_type"]
+            }
         }
-    }
 ]
 
 # ==============================================================================
 # 2. MÔ PHỎNG DỮ LIỆU & HÀM THỰC THI TOOL (EXECUTION LAYER)
 # ==============================================================================
-
-MOCK_DATABASE = {
-    "SV2026001": {
-        "full_name": "Nguyễn Văn An",
-        "class": "AI-K4",
-        "gpa": 3.85,
-        "email": "an.nv@vinuni.edu.vn",
-        "status": "Đang học",
-        "advisor": "PGS.TS Nguyễn Văn A"
+VINBUS_DATABASE = {
+    "E01": {
+        "route_name": "Tuyến E01: Bến xe Mỹ Đình - Vinhomes Ocean Park",
+        "departure": "Bến xe Mỹ Đình",
+        "destination": "Vinhomes Ocean Park (Gia Lâm)",
+        "operating_hours": "05:00 - 22:30 hàng ngày",
+        "frequency": "15 - 20 phút / chuyến",
+        "ticket_price_single": "8.000 VNĐ",
+        "ticket_price_monthly": "100.000 VNĐ (Ưu đãi HS/SV) / 200.000 VNĐ (Phổ thông)",
+        "stops": ["Bến xe Mỹ Đình", "Cầu Giấy", "Kim Mã", "Nguyễn Văn Cừ", "Vinhomes Ocean Park"]
     },
-    "SV2026002": {
-        "full_name": "Trần Thị Bình",
-        "class": "AI-K4",
-        "gpa": 3.60,
-        "email": "binh.tt@vinuni.edu.vn",
-        "status": "Đang học",
-        "advisor": "TS. Lê Thị B"
+    "E02": {
+        "route_name": "Tuyến E02: Hào Nam - Vinhomes Ocean Park",
+        "departure": "Ga Cát Linh / Hào Nam",
+        "destination": "Vinhomes Ocean Park",
+        "operating_hours": "05:00 - 22:00 hàng ngày",
+        "frequency": "15 phút / chuyến",
+        "ticket_price_single": "8.000 VNĐ",
+        "ticket_price_monthly": "100.000 VNĐ (HS/SV) / 200.000 VNĐ (Phổ thông)",
+        "stops": ["Hào Nam", "Tràng Thi", "Trần Hưng Đạo", "Cầu Vĩnh Tuy", "Vinhomes Ocean Park"]
+    },
+    "E03": {
+        "route_name": "Tuyến E03: Mỹ Đình (Hàm Nghi) - Vinhomes Ocean Park",
+        "departure": "Hàm Nghi (Mỹ Đình)",
+        "destination": "Vinhomes Ocean Park",
+        "operating_hours": "05:05 - 22:10 hàng ngày",
+        "frequency": "20 phút / chuyến",
+        "ticket_price_single": "9.000 VNĐ",
+        "ticket_price_monthly": "100.000 VNĐ (HS/SV) / 200.000 VNĐ (Phổ thông)",
+        "stops": ["Hàm Nghi", "Thái Hà", "Chùa Bộc", "Cầu Thanh Trì", "Vinhomes Ocean Park"]
     }
 }
 
 
-def execute_academic_query(student_id: str) -> str:
-    """Thực thi tra cứu học vụ theo mã sinh viên"""
-    student = MOCK_DATABASE.get(student_id.strip().upper())
-    if student:
+def execute_bus_route_query(route_id: str) -> str:
+    """Thực thi tra cứu lộ trình xe bus theo mã tuyến"""
+    clean_route_id = route_id.strip().upper()
+    route_info = VINBUS_DATABASE.get(clean_route_id)
+    if route_info:
         return json.dumps({
             "status": "SUCCESS",
-            "student_id": student_id,
-            "data": student
+            "route_id": clean_route_id,
+            "data": route_info
         }, ensure_ascii=False)
     else:
         return json.dumps({
             "status": "NOT_FOUND",
-            "message": f"Không tìm thấy dữ liệu sinh viên có mã '{student_id}'"
+            "message": f"Không tìm thấy thông tin lộ trình cho tuyến xe bus '{route_id}'. Hiện VinBus hỗ trợ các tuyến: E01, E02, E03."
         }, ensure_ascii=False)
 
 
-def execute_schedule_appointment(student_id: str, datetime_str: str, advisor_name: str = "PGS.TS Nguyễn Văn A") -> str:
-    """Thực thi đặt lịch hẹn tư vấn học vụ"""
+def execute_register_monthly_pass(passenger_name: str, phone_number: str, route_id: str, pass_type: str = "Phổ thông", start_month: str = "10/2026") -> str:
+    """Thực thi đăng ký vé tháng xe bus điện VinBus"""
+    price_map = {
+        "Học sinh/Sinh viên": "100.000 VNĐ/tháng",
+        "Người cao tuổi": "Miễn phí (Thẻ ưu tiên)",
+        "Tập thể": "140.000 VNĐ/tháng",
+        "Phổ thông": "200.000 VNĐ/tháng"
+    }
+    fee = price_map.get(pass_type, "200.000 VNĐ/tháng")
+    registration_code = f"VB-PASS-{phone_number[-4:] if len(phone_number)>=4 else '8888'}"
+    
     return json.dumps({
         "status": "SUCCESS",
-        "booking_id": f"BK-{student_id}-99",
-        "student_id": student_id,
-        "datetime": datetime_str,
-        "advisor": advisor_name,
-        "message": f"Đặt lịch thành công cho sinh viên {student_id} với {advisor_name} vào lúc {datetime_str}."
+        "registration_code": registration_code,
+        "passenger_name": passenger_name,
+        "phone_number": phone_number,
+        "route_id": route_id,
+        "pass_type": pass_type,
+        "start_month": start_month,
+        "fee": fee,
+        "message": f"Đăng ký vé tháng xe bus điện VinBus thành công cho hành khách {passenger_name}! Mã đăng ký: {registration_code}, Tuyến: {route_id}, Mức phí: {fee}, Áp dụng từ tháng: {start_month}."
     }, ensure_ascii=False)
 
 
 # Router gọi tool thực tế
 TOOL_ROUTER = {
-    "academic_query": execute_academic_query,
-    "schedule_appointment": execute_schedule_appointment
+    "bus_route_query": execute_bus_route_query,
+    "register_monthly_pass": execute_register_monthly_pass
 }
 
 def dispatch_tool_call(tool_name: str, arguments: Dict[str, Any]) -> str:
