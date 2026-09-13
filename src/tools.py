@@ -1,6 +1,6 @@
 """
-🛠️ TOOL DEFINITIONS & EXECUTION BACKEND
-Mã nguồn chứa danh sách Tool Schemas (JSON Schema) và Execution Layer phục vụ cho MCP Server.
+🛠️ TOOL DEFINITIONS & EXECUTION BACKEND - VINBUS CUSTOMER SERVICE ASSISTANT
+Mã nguồn chứa danh sách Tool Schemas (JSON Schema) và Execution Layer cho VinBus.
 """
 
 import json
@@ -11,70 +11,59 @@ from typing import Dict, Any
 # ==============================================================================
 
 TOOLS_SCHEMA = [
-    # Tool 1: Đã được định nghĩa mẫu sẵn cho Học viên tham khảo
-      {
+    # Tool 1: Tra cứu lộ trình tuyến xe bus điện VinBus hoặc danh sách toàn bộ các tuyến
+    {
         "name": "bus_route_query",
-        "description": "Tra cứu lộ trình, điểm đầu cuối, danh sách điểm dừng chính, giờ hoạt động và tần suất của tuyến xe bus điện VinBus.",
+        "description": "Tra cứu lộ trình, điểm dừng, giờ chạy của một tuyến xe cụ thể qua route_id (ví dụ 'E01', 'E02', 'E03') HOẶC liệt kê danh sách tất cả các tuyến xe bus điện VinBus hiện có khi truyền route_id='ALL' hoặc không biết mã tuyến.",
         "parameters": {
             "type": "object",
             "properties": {
                 "route_id": {
                     "type": "string",
-                    "description": "Mã tuyến xe bus điện VinBus (ví dụ: 'E01', 'E02', 'E03')"
+                    "description": "Mã tuyến xe bus điện VinBus (ví dụ 'E01', 'E02', 'E03' hoặc 'ALL' để lấy danh sách tất cả các tuyến)"
                 }
             },
-            "required": ["route_id"]
+            "required": []
         }
     },
     
-    
-    # --------------------------------------------------------------------------
-    # TODO 1.2: HỌC VIÊN HOÀN THIỆN TOOL SCHEMA CHO 'schedule_appointment'
-    # 🎯 YÊU CẦU THIẾT KẾ SCHEMA (JSON SCHEMA STANDARD):
-    # 1. Tool dùng để đặt lịch hẹn tư vấn học vụ với Cố vấn học tập VinUni.
-    # 2. Thiết kế các tham số (properties) để LLM trích xuất:
-    #    - student_id (string): Mã sinh viên cần đặt lịch (ví dụ: 'SV2026001')
-    #    - datetime_str (string): Thời gian hẹn (ví dụ: '14:00 15/09/2026')
-    #    - advisor_name (string): Tên cố vấn học tập
-    # 3. Khai báo danh sách các trường bắt buộc (required).
-    # --------------------------------------------------------------------------
-
     # Tool 2: Đăng ký vé tháng xe bus điện VinBus
-        {
-            "name": "register_monthly_pass",
-            "description": "Đăng ký vé tháng xe bus điện VinBus cho hành khách (ưu đãi cho sinh viên, người cao tuổi, phổ thông).",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "passenger_name": {
-                        "type": "string",
-                        "description": "Họ và tên đầy đủ của hành khách đăng ký"
-                    },
-                    "phone_number": {
-                        "type": "string",
-                        "description": "Số điện thoại liên hệ của hành khách"
-                    },
-                    "route_id": {
-                        "type": "string",
-                        "description": "Mã tuyến xe bus điện đăng ký vé tháng (ví dụ: 'E01', 'E02', 'Tất cả các tuyến')"
-                    },
-                    "pass_type": {
-                        "type": "string",
-                        "description": "Đối tượng đăng ký: 'Học sinh/Sinh viên', 'Người cao tuổi', 'Tập thể', 'Phổ thông'"
-                    },
-                    "start_month": {
-                        "type": "string",
-                        "description": "Tháng bắt đầu áp dụng vé tháng (ví dụ: '10/2026')"
-                    }
+    {
+        "name": "register_monthly_pass",
+        "description": "Đăng ký vé tháng xe bus điện VinBus cho hành khách (ưu đãi cho sinh viên, người cao tuổi, phổ thông).",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "passenger_name": {
+                    "type": "string",
+                    "description": "Họ và tên đầy đủ của hành khách đăng ký"
                 },
-                "required": ["passenger_name", "phone_number", "route_id", "pass_type"]
-            }
+                "phone_number": {
+                    "type": "string",
+                    "description": "Số điện thoại liên hệ của hành khách"
+                },
+                "route_id": {
+                    "type": "string",
+                    "description": "Mã tuyến xe bus điện đăng ký vé tháng (ví dụ: 'E01', 'E02', 'Tất cả các tuyến')"
+                },
+                "pass_type": {
+                    "type": "string",
+                    "description": "Đối tượng đăng ký: 'Học sinh/Sinh viên', 'Người cao tuổi', 'Tập thể', 'Phổ thông'"
+                },
+                "start_month": {
+                    "type": "string",
+                    "description": "Tháng bắt đầu áp dụng vé tháng (ví dụ: '10/2026')"
+                }
+            },
+            "required": ["passenger_name", "phone_number", "route_id", "pass_type"]
         }
+    }
 ]
 
 # ==============================================================================
 # 2. MÔ PHỎNG DỮ LIỆU & HÀM THỰC THI TOOL (EXECUTION LAYER)
 # ==============================================================================
+
 VINBUS_DATABASE = {
     "E01": {
         "route_name": "Tuyến E01: Bến xe Mỹ Đình - Vinhomes Ocean Park",
@@ -109,9 +98,32 @@ VINBUS_DATABASE = {
 }
 
 
-def execute_bus_route_query(route_id: str) -> str:
-    """Thực thi tra cứu lộ trình xe bus theo mã tuyến"""
-    clean_route_id = route_id.strip().upper()
+def execute_bus_route_query(route_id: str = "ALL") -> str:
+    """Thực thi tra cứu lộ trình xe bus theo mã tuyến hoặc lấy danh sách tất cả các tuyến"""
+    if not route_id:
+        route_id = "ALL"
+        
+    clean_route_id = str(route_id).strip().upper()
+    
+    # Trường hợp hỏi danh sách tất cả các tuyến
+    if clean_route_id in ["ALL", "DANH_SACH", "DANH SACH", "TẤT CẢ", "TAT CA", "TẤT CẢ CÁC TUYẾN"]:
+        all_routes = []
+        for rid, rinfo in VINBUS_DATABASE.items():
+            all_routes.append({
+                "route_id": rid,
+                "route_name": rinfo["route_name"],
+                "departure": rinfo["departure"],
+                "destination": rinfo["destination"],
+                "operating_hours": rinfo["operating_hours"]
+            })
+        return json.dumps({
+            "status": "SUCCESS",
+            "route_id": "ALL",
+            "message": "Danh sách các tuyến xe bus điện VinBus hiện có",
+            "data": all_routes
+        }, ensure_ascii=False)
+        
+    # Trường hợp tra cứu chi tiết một tuyến cụ thể
     route_info = VINBUS_DATABASE.get(clean_route_id)
     if route_info:
         return json.dumps({

@@ -1,6 +1,7 @@
 """
-🚀 CORE AGENT APPLICATION (DAY 03: VINBUS REACT AGENT)
+🚀 CORE AGENT APPLICATION (DAY 03: VINBUS REACT AGENT WITH CHAT MEMORY)
 Thực thi so sánh giữa Chatbot Baseline và ReAct Agent kết nối MCP Server cho VinBus.
+Hỗ trợ Conversation History / Context Window cho phiên tương tác đa lượt.
 """
 
 import json
@@ -55,10 +56,17 @@ def run_baseline_chatbot(user_query: str, provider):
     print(f"🤖 Chatbot phản hồi:\n{response}")
 
 
-def run_react_agent(user_query: str, provider, mcp_server: MCPAcademicServer) -> list:
+def run_react_agent(user_query: str, provider, mcp_server: MCPAcademicServer, history: list = None) -> tuple:
     """
-    [REACT AGENT LOOP] Thực thi vòng lặp Thought -> Action -> Observation với MCP Server
+    [REACT AGENT LOOP] Thực thi vòng lặp Thought -> Action -> Observation với MCP Server & Chat Memory
+    Trả về (trace_logs, updated_history)
     """
+    if history is None:
+        history = []
+        
+    current_history = list(history)
+    current_history.append({"role": "user", "content": str(user_query)})
+    
     print(f"\n🤖 [REACT AGENT] Câu hỏi: {user_query}")
     
     step = 0
@@ -70,17 +78,18 @@ def run_react_agent(user_query: str, provider, mcp_server: MCPAcademicServer) ->
         step_start_time = time.time()
         print(f"\n--- 🔄 Vòng lặp ReAct Loop (Step {step}/{MAX_ITERATIONS}) ---")
         
-        # Gọi LLM với Native Tool Calling Specs
-        llm_response = provider.generate_with_tools(user_query, tools_list, system_prompt=REACT_AGENT_SYSTEM_PROMPT)
+        # Truyền lịch sử hội thoại cho LLM Provider
+        llm_response = provider.generate_with_tools(current_history, tools_list, system_prompt=REACT_AGENT_SYSTEM_PROMPT)
         latency_ms = round((time.time() - step_start_time) * 1000, 2)
         
         thought = llm_response.get("thought", "Đang suy luận...")
         print(f"🧠 [Thought]: {thought}")
         
-        # Trường hợp 1: LLM quyết định trả lời bằng văn bản trực tiếp
+        # LLM trả về văn bản trực tiếp
         if llm_response.get("type") == "text":
             final_content = llm_response.get("content", "")
             print(f"🏁 [Final Answer]: {final_content}")
+            current_history.append({"role": "assistant", "content": str(final_content)})
             trace_logs.append({
                 "step": step,
                 "query": user_query,
@@ -91,14 +100,14 @@ def run_react_agent(user_query: str, provider, mcp_server: MCPAcademicServer) ->
             })
             break
             
-        # Trường hợp 2: LLM đề xuất gọi Tool (Action)
+        # LLM đề xuất gọi Tool (Action)
         elif llm_response.get("type") == "tool_call":
             tool_name = llm_response.get("tool_name")
             arguments = llm_response.get("arguments", {})
             
             print(f"🛠️ [Action Proposed]: {tool_name}({arguments})")
             
-            # Thực thi Tool qua MCP Server
+            # Thực thi qua MCP Server
             mcp_result = mcp_server.call_tool(tool_name, arguments)
             obs_data = mcp_result.get("result", {})
             
@@ -109,18 +118,24 @@ def run_react_agent(user_query: str, provider, mcp_server: MCPAcademicServer) ->
                 obs_str = json.dumps(obs_data, ensure_ascii=False)
                 print(f"👁️ [Observation từ MCP Server]: {obs_str}")
                 
-                # Tổng hợp Final Answer từ kết quả Observation thực tế
+                # Tổng hợp câu trả lời cho VinBus
                 if obs_data.get("status") == "SUCCESS":
                     if "data" in obs_data:
                         d = obs_data["data"]
-                        stops_str = ", ".join(d.get("stops", []))
-                        final_answer = (
-                            f"Thông tin {d.get('route_name', '')}:\n"
-                            f"- Điểm đầu/cuối: {d.get('departure', '')} ➡️ {d.get('destination', '')}\n"
-                            f"- Giờ hoạt động: {d.get('operating_hours', '')} | Tần suất: {d.get('frequency', '')}\n"
-                            f"- Giá vé: Lượt {d.get('ticket_price_single', '')} | Tháng: {d.get('ticket_price_monthly', '')}\n"
-                            f"- Các điểm dừng chính: {stops_str}."
-                        )
+                        if isinstance(d, list):
+                            routes_list_str = "\n".join([f"- **{r['route_id']}**: {r['route_name']} ({r['departure']} ➡️ {r['destination']}) - {r['operating_hours']}" for r in d])
+                            final_answer = f"Danh sách các tuyến xe bus điện VinBus hiện có:\n{routes_list_str}"
+                        elif isinstance(d, dict):
+                            stops_str = ", ".join(d.get("stops", []))
+                            final_answer = (
+                                f"Thông tin {d.get('route_name', '')}:\n"
+                                f"- Điểm đầu/cuối: {d.get('departure', '')} ➡️ {d.get('destination', '')}\n"
+                                f"- Giờ hoạt động: {d.get('operating_hours', '')} | Tần suất: {d.get('frequency', '')}\n"
+                                f"- Giá vé: Lượt {d.get('ticket_price_single', '')} | Tháng: {d.get('ticket_price_monthly', '')}\n"
+                                f"- Các điểm dừng chính: {stops_str}."
+                            )
+                        else:
+                            final_answer = f"Xử lý thành công: {json.dumps(obs_data, ensure_ascii=False)}"
                     elif "message" in obs_data:
                         final_answer = obs_data["message"]
                     else:
@@ -130,6 +145,7 @@ def run_react_agent(user_query: str, provider, mcp_server: MCPAcademicServer) ->
                 else:
                     final_answer = f"Phản hồi từ công cụ VinBus: {json.dumps(obs_data, ensure_ascii=False)}"
             
+            current_history.append({"role": "assistant", "content": str(final_answer)})
             trace_logs.append({
                 "step": step,
                 "query": user_query,
@@ -140,8 +156,7 @@ def run_react_agent(user_query: str, provider, mcp_server: MCPAcademicServer) ->
                 "latency_ms": latency_ms
             })
             
-            # Kết thúc vòng lặp sau khi hoàn tất Observation và xuất Final Answer
-            print(f"🧠 [Thought]: Đã nhận được dữ liệu từ MCP Server. Tổng hợp kết quả phản hồi.")
+            print(f"🧠 [Thought]: Đã nhận dữ liệu từ MCP Server VinBus. Tổng hợp kết quả phản hồi khách hàng.")
             print(f"🏁 [Final Answer]: {final_answer}")
             
             trace_logs.append({
@@ -154,7 +169,7 @@ def run_react_agent(user_query: str, provider, mcp_server: MCPAcademicServer) ->
             })
             break
 
-    return trace_logs
+    return trace_logs, current_history
 
 
 if __name__ == "__main__":
@@ -172,19 +187,22 @@ if __name__ == "__main__":
     print(f"✅ Đã tải thành công {len(tests)} Test Cases.\n")
     
     if "--interactive" in sys.argv:
-        print("🎮 [INTERACTIVE CHAT] Trò chuyện với Trợ lý VinBus:")
+        print("🎮 [INTERACTIVE CHAT] Trò chuyện với Trợ lý VinBus (Đã bật Chat Memory):")
         print("💡 Gợi ý câu hỏi:")
         print("   - Tra cứu: 'Hãy tra cứu lộ trình tuyến xe bus VinBus E01'")
         print("   - Đăng ký: 'Đăng ký vé tháng tuyến E01 cho Nguyễn Văn A, SĐT 0912345678, đối tượng Học sinh/Sinh viên'")
         print("   - Gõ 'exit' để thoát.\n")
+        session_history = []
         while True:
             try:
-                user_input = input("👤 Khách hàng: ").strip()
+                user_input = input("\n👤 Khách hàng: ").strip()
                 if not user_input or user_input.lower() in ["exit", "quit"]:
+                    print("👋 Tạm biệt!")
                     break
-                logs = run_react_agent(user_input, provider, mcp_server)
+                logs, session_history = run_react_agent(user_input, provider, mcp_server, history=session_history)
                 save_waterfall_trace(logs)
             except (KeyboardInterrupt, EOFError):
+                print("\n👋 Đã thoát phiên tương tác.")
                 break
     elif "--all" in sys.argv:
         print("🚀 [TEST SUITE MODE] Chạy thử 5 Test Cases nghiệm thu:")
@@ -192,12 +210,12 @@ if __name__ == "__main__":
         for tc in tests:
             print(f"\n==================================================")
             print(f"🧪 [{tc['id']}] Loại test: {tc['type']}")
-            logs = run_react_agent(tc["question"], provider, mcp_server)
+            logs, _ = run_react_agent(tc["question"], provider, mcp_server)
             all_traces.extend(logs)
         if all_traces:
             save_waterfall_trace(all_traces)
     else:
         sample_query = tests[1]["question"]
         print(f"--- 🏁 DEMO CHẠY THỬ TC02 ---")
-        logs = run_react_agent(sample_query, provider, mcp_server)
+        logs, _ = run_react_agent(sample_query, provider, mcp_server)
         save_waterfall_trace(logs)
