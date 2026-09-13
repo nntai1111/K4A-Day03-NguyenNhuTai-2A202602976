@@ -1,35 +1,111 @@
 [
   {
     "step": 1,
-    "query": "Nguyễn như tài, học xinh, 9/2026",
+    "query": "Chào bạn, xe bus điện VinBus có những ưu điểm gì và cách thức thanh toán vé lượt như thế nào?",
+    "action_type": "FINAL_ANSWER",
+    "thought": "OpenAI phản hồi trực tiếp bằng văn bản (không cần gọi công cụ).",
+    "output": "Chào bạn! Xe bus điện VinBus có nhiều ưu điểm, bao gồm:\n\n1. **Thân thiện với môi trường**: Xe sử dụng năng lượng điện, giúp giảm khí thải ô nhiễm và bảo vệ môi trường.\n2. **Tiện lợi và êm ái**: Xe bus điện hoạt động êm ái, mang đến trải nghiệm di chuyển thoải mái cho hành khách.\n3. **Hiện đại và thông minh**: Hệ thống quản lý thông minh giúp người dùng dễ dàng theo dõi lộ trình, thời gian đến và các thông tin cần thiết khác.\n4. **Đáp ứng nhu cầu đi lại của mọi người**: Có nhiều tuyến xe phủ sóng rộng rãi, phục vụ cho mọi đối tượng.\n\nVề cách thức thanh toán vé lượt, bạn có thể thanh toán bằng các hình thức sau:\n- **Mua vé tại bến xe**: Hành khách có thể mua vé trực tiếp tại các điểm bán vé hoặc phòng vé.\n- **Thanh toán qua ứng dụng di động**: Nếu VinBus có ứng dụng di động, bạn có thể tải ứng dụng và thực hiện thanh toán qua đó.\n- **Thẻ thanh toán**: Có thể sử dụng thẻ ngân hàng hoặc thẻ thanh toán điện tử để thanh toán.\n\nNếu bạn cần biết thông tin chi tiết hơn hoặc muốn tìm hiểu thêm về lộ trình, hãy cho tôi biết!",
+    "latency_ms": 4491.96
+  },
+  {
+    "step": 1,
+    "query": "Hãy tra cứu lộ trình, điểm dừng và thời gian hoạt động của tuyến xe bus điện VinBus E01.",
     "action_type": "TOOL_EXECUTION",
-    "tool_name": "register_monthly_pass",
+    "tool_name": "bus_route_query",
     "arguments": {
-      "passenger_name": "Nguyễn như tài",
-      "phone_number": "0327800152",
-      "route_id": "E02",
-      "pass_type": "Học sinh/Sinh viên",
-      "start_month": "09/2026"
+      "route_id": "E01"
     },
     "observation": {
       "status": "SUCCESS",
-      "registration_code": "VB-PASS-0152",
-      "passenger_name": "Nguyễn như tài",
-      "phone_number": "0327800152",
-      "route_id": "E02",
-      "pass_type": "Học sinh/Sinh viên",
-      "start_month": "09/2026",
-      "fee": "100.000 VNĐ/tháng",
-      "message": "Đăng ký vé tháng xe bus điện VinBus thành công cho hành khách Nguyễn như tài! Mã đăng ký: VB-PASS-0152, Tuyến: E02, Mức phí: 100.000 VNĐ/tháng, Áp dụng từ tháng: 09/2026."
+      "route_id": "E01",
+      "data": {
+        "route_name": "Tuyến E01: Bến xe Mỹ Đình - Vinhomes Ocean Park",
+        "departure": "Bến xe Mỹ Đình",
+        "destination": "Vinhomes Ocean Park (Gia Lâm)",
+        "operating_hours": "05:00 - 22:30 hàng ngày",
+        "frequency": "15 - 20 phút / chuyến",
+        "ticket_price_single": "8.000 VNĐ",
+        "ticket_price_monthly": "100.000 VNĐ (Ưu đãi HS/SV) / 200.000 VNĐ (Phổ thông)",
+        "stops": [
+          "Bến xe Mỹ Đình",
+          "Cầu Giấy",
+          "Kim Mã",
+          "Nguyễn Văn Cừ",
+          "Vinhomes Ocean Park"
+        ]
+      }
     },
-    "latency_ms": 2039.68
+    "latency_ms": 1535.23
   },
   {
     "step": 2,
-    "query": "Nguyễn như tài, học xinh, 9/2026",
+    "query": "Hãy tra cứu lộ trình, điểm dừng và thời gian hoạt động của tuyến xe bus điện VinBus E01.",
     "action_type": "FINAL_ANSWER",
     "thought": "Tổng hợp thông tin dịch vụ VinBus thành công.",
-    "output": "Đăng ký vé tháng xe bus điện VinBus thành công cho hành khách Nguyễn như tài! Mã đăng ký: VB-PASS-0152, Tuyến: E02, Mức phí: 100.000 VNĐ/tháng, Áp dụng từ tháng: 09/2026.",
+    "output": "Thông tin Tuyến E01: Bến xe Mỹ Đình - Vinhomes Ocean Park:\n- Điểm đầu/cuối: Bến xe Mỹ Đình ➡️ Vinhomes Ocean Park (Gia Lâm)\n- Giờ hoạt động: 05:00 - 22:30 hàng ngày | Tần suất: 15 - 20 phút / chuyến\n- Giá vé: Lượt 8.000 VNĐ | Tháng: 100.000 VNĐ (Ưu đãi HS/SV) / 200.000 VNĐ (Phổ thông)\n- Các điểm dừng chính: Bến xe Mỹ Đình, Cầu Giấy, Kim Mã, Nguyễn Văn Cừ, Vinhomes Ocean Park.",
+    "latency_ms": 10.0
+  },
+  {
+    "step": 1,
+    "query": "Tôi muốn đăng ký vé tháng tuyến E01 cho hành khách Nguyễn Văn An, SĐT 0912345678, đối tượng Học sinh/Sinh viên từ tháng 10/2026.",
+    "action_type": "TOOL_EXECUTION",
+    "tool_name": "register_monthly_pass",
+    "arguments": {
+      "passenger_name": "Nguyễn Văn An",
+      "phone_number": "0912345678",
+      "route_id": "E01",
+      "pass_type": "Học sinh/Sinh viên",
+      "start_month": "10/2026"
+    },
+    "observation": {
+      "status": "SUCCESS",
+      "registration_code": "VB-PASS-5678",
+      "passenger_name": "Nguyễn Văn An",
+      "phone_number": "0912345678",
+      "route_id": "E01",
+      "pass_type": "Học sinh/Sinh viên",
+      "start_month": "10/2026",
+      "fee": "100.000 VNĐ/tháng",
+      "message": "Đăng ký vé tháng xe bus điện VinBus thành công cho hành khách Nguyễn Văn An! Mã đăng ký: VB-PASS-5678, Tuyến: E01, Mức phí: 100.000 VNĐ/tháng, Áp dụng từ tháng: 10/2026."
+    },
+    "latency_ms": 2235.69
+  },
+  {
+    "step": 2,
+    "query": "Tôi muốn đăng ký vé tháng tuyến E01 cho hành khách Nguyễn Văn An, SĐT 0912345678, đối tượng Học sinh/Sinh viên từ tháng 10/2026.",
+    "action_type": "FINAL_ANSWER",
+    "thought": "Tổng hợp thông tin dịch vụ VinBus thành công.",
+    "output": "Đăng ký vé tháng xe bus điện VinBus thành công cho hành khách Nguyễn Văn An! Mã đăng ký: VB-PASS-5678, Tuyến: E01, Mức phí: 100.000 VNĐ/tháng, Áp dụng từ tháng: 10/2026.",
+    "latency_ms": 10.0
+  },
+  {
+    "step": 1,
+    "query": "Tôi muốn đi từ Mỹ Đình đến Vinhomes Ocean Park. Hãy tìm tuyến xe phù hợp và đăng ký vé tháng tuyến đó cho tôi (Tên: Trần Thị Bình, SĐT: 0987654321, Phổ thông).",
+    "action_type": "FINAL_ANSWER",
+    "thought": "OpenAI phản hồi trực tiếp bằng văn bản (không cần gọi công cụ).",
+    "output": "Để giúp bạn tìm tuyến xe phù hợp từ Mỹ Đình đến Vinhomes Ocean Park, tôi sẽ tra cứu danh sách các tuyến xe bus điện VinBus hiện có trước. Sau khi biết được mã tuyến, tôi sẽ tiến hành đăng ký vé tháng cho bạn.\n\nBây giờ, tôi sẽ thực hiện việc tra cứu danh sách các tuyến xe.",
+    "latency_ms": 1265.37
+  },
+  {
+    "step": 1,
+    "query": "Hãy tra cứu thông tin lộ trình của tuyến xe bus VinBus E999.",
+    "action_type": "TOOL_EXECUTION",
+    "tool_name": "bus_route_query",
+    "arguments": {
+      "route_id": "E999"
+    },
+    "observation": {
+      "status": "NOT_FOUND",
+      "message": "Không tìm thấy thông tin lộ trình cho tuyến xe bus 'E999'. Hiện VinBus hỗ trợ các tuyến: E01, E02, E03."
+    },
+    "latency_ms": 1157.4
+  },
+  {
+    "step": 2,
+    "query": "Hãy tra cứu thông tin lộ trình của tuyến xe bus VinBus E999.",
+    "action_type": "FINAL_ANSWER",
+    "thought": "Tổng hợp thông tin dịch vụ VinBus thành công.",
+    "output": "Không tìm thấy thông tin lộ trình cho tuyến xe bus 'E999'. Hiện VinBus hỗ trợ các tuyến: E01, E02, E03.",
     "latency_ms": 10.0
   }
 ]

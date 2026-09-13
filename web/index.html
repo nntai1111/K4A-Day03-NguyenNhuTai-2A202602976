@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VinBus AI Assistant - Trợ Lý Xe Bus Điện Thông Minh (ReAct Agent)</title>
+  <meta name="description" content="Trợ lý ảo thông minh VinBus hỗ trợ tra cứu lộ trình, giờ chạy và đăng ký vé tháng xe bus điện VinBus với kiến trúc ReAct Agent & MCP Server.">
+  
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Highlight.js for JSON/Code highlighting in trace -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <!-- Marked.js for markdown parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- BACKGROUND DECORATIONS -->
+    <div class="bg-glow glow-1"></div>
+    <div class="bg-glow glow-2"></div>
+    <div class="bg-glow glow-3"></div>
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="sidebar">
+      <div class="brand-container">
+        <div class="logo-wrapper">
+          <i class="fa-solid fa-bus-simple logo-icon"></i>
+          <span class="pulse-dot"></span>
+        </div>
+        <div class="brand-text">
+          <h2>VinBus <span class="badge-tag">AI ReAct</span></h2>
+          <p class="subtitle">Trợ Lý Xe Bus Điện Thông Minh</p>
+        </div>
+      </div>
+
+      <div class="status-card">
+        <div class="status-header">
+          <span class="status-indicator online"></span>
+          <span id="provider-name" class="provider-label">LLM Provider Loading...</span>
+        </div>
+        <div class="status-details">
+          <div class="meta-item">
+            <i class="fa-solid fa-microchip"></i>
+            <span>MCP Server:</span>
+            <strong id="mcp-name">VinBus MCP</strong>
+          </div>
+          <div class="meta-item">
+            <i class="fa-solid fa-screwdriver-wrench"></i>
+            <span>Tools Active:</span>
+            <strong id="tools-count">2 Tools</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUICK PROMPTS -->
+      <div class="sidebar-section">
+        <h3><i class="fa-solid fa-bolt"></i> Gợi Ý Câu Hỏi Nhanh</h3>
+        <div class="quick-prompts-list">
+          <button class="prompt-chip" onclick="useQuickPrompt('Hãy tra cứu lộ trình tuyến xe bus VinBus E01')">
+            <i class="fa-solid fa-route"></i> Tra cứu lộ trình E01
+          </button>
+          <button class="prompt-chip" onclick="useQuickPrompt('Hãy liệt kê danh sách tất cả các tuyến xe bus điện VinBus hiện có')">
+            <i class="fa-solid fa-list-check"></i> Tất cả tuyến VinBus
+          </button>
+          <button class="prompt-chip" onclick="useQuickPrompt('Đăng ký vé tháng tuyến E01 cho Nguyễn Văn A, SĐT 0912345678, đối tượng Học sinh/Sinh viên')">
+            <i class="fa-solid fa-id-card"></i> Đăng ký vé tháng E01
+          </button>
+          <button class="prompt-chip" onclick="useQuickPrompt('Cho tôi biết giờ hoạt động và giá vé của xe bus E02')">
+            <i class="fa-solid fa-clock"></i> Giờ chạy & Giá vé E02
+          </button>
+        </div>
+      </div>
+
+      <!-- TEST SUITE SECTION -->
+      <div class="sidebar-section">
+        <h3><i class="fa-solid fa-vial"></i> Test Cases Nghiệm Thu</h3>
+        <div id="test-cases-container" class="test-cases-list">
+          <!-- Loaded dynamically via script.js -->
+        </div>
+      </div>
+
+      <!-- SIDEBAR FOOTER -->
+      <div class="sidebar-footer">
+        <button id="clear-chat-btn" class="action-btn secondary-btn" onclick="clearChat()">
+          <i class="fa-solid fa-trash-can"></i> Đặt Lại Trò Chuyện
+        </button>
+        <button id="view-trace-btn" class="action-btn outline-btn" onclick="toggleTraceModal()">
+          <i class="fa-solid fa-chart-waterfall"></i> Waterfall Trace Log
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CHAT INTERFACE -->
+    <main class="chat-wrapper">
+      <!-- TOP HEADER BAR -->
+      <header class="chat-header">
+        <div class="header-title">
+          <button class="mobile-menu-btn" onclick="toggleMobileSidebar()">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <h1>Trung Tâm Hỗ Trợ Khách Hàng VinBus</h1>
+          <span class="model-badge" id="model-name-badge">Gemini ReAct Agent</span>
+        </div>
+        <div class="header-actions">
+          <button class="icon-tool-btn" title="Chế độ ReAct Observability" onclick="toggleReActTraceView()">
+            <i class="fa-solid fa-brain"></i>
+            <span class="tool-tip">Hiển Thị Thought Process</span>
+          </button>
+          <button class="icon-tool-btn" title="Chế độ Tối/Sáng" onclick="toggleTheme()">
+            <i class="fa-solid fa-moon" id="theme-icon"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- MESSAGES DISPLAY AREA -->
+      <section id="chat-messages" class="messages-container">
+        <!-- WELCOME HERO BANNER -->
+        <div class="welcome-card" id="welcome-card">
+          <div class="welcome-icon">
+            <i class="fa-solid fa-bus"></i>
+          </div>
+          <h2>Xin Chào! Tôi Là Trợ Lý VinBus AI</h2>
+          <p>Tôi có thể giúp bạn tra cứu thông tin tuyến xe bus điện VinBus, lịch trình, giá vé và hỗ trợ đăng ký vé tháng trực tiếp qua hệ thống MCP Server.</p>
+          
+          <div class="feature-grid">
+            <div class="feature-item">
+              <i class="fa-solid fa-magnifying-glass-location"></i>
+              <h4>Tra Cứu Lộ Trình</h4>
+              <p>Chi tiết các điểm dừng, tần suất chạy tuyến E01, E02, E03.</p>
+            </div>
+            <div class="feature-item">
+              <i class="fa-solid fa-ticket"></i>
+              <h4>Đăng Ký Vé Tháng</h4>
+              <p>Hỗ trợ tạo vé tháng ưu đãi cho học sinh, sinh viên, người lớn tuổi.</p>
+            </div>
+            <div class="feature-item">
+              <i class="fa-solid fa-network-wired"></i>
+              <h4>Hệ Thống ReAct & MCP</h4>
+              <p>Tự động suy luận Thought ➔ Action ➔ Observation linh hoạt.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHAT INPUT CONTAINER -->
+      <footer class="input-area">
+        <div class="prompt-suggestions" id="prompt-suggestions">
+          <span class="suggestion-tag" onclick="useQuickPrompt('Lộ trình tuyến E01 đi qua những đâu?')">📍 Lộ trình E01</span>
+          <span class="suggestion-tag" onclick="useQuickPrompt('Vé tháng sinh viên VinBus giá bao nhiêu?')">🎫 Vé tháng SV</span>
+          <span class="suggestion-tag" onclick="useQuickPrompt('Xe bus VinBus chạy từ mấy giờ tới mấy giờ?')">⏰ Giờ hoạt động</span>
+          <span class="suggestion-tag" onclick="useQuickPrompt('Đăng ký vé tháng xe bus E02 cho Phạm Văn B, SĐT 0988776655')">📝 Đăng ký vé tháng</span>
+        </div>
+
+        <form id="chat-form" onsubmit="handleSendMessage(event)" class="input-form">
+          <div class="input-glass-box">
+            <button type="button" class="voice-btn" id="voice-btn" onclick="toggleVoiceInput()" title="Nhập bằng giọng nói">
+              <i class="fa-solid fa-microphone"></i>
+            </button>
+
+            <textarea 
+              id="user-input" 
+              placeholder="Hỏi bất kỳ điều gì về xe bus điện VinBus... (Ấn Enter để gửi, Shift+Enter để xuống dòng)"
+              rows="1" 
+              onkeydown="handleKeyDown(event)"
+              oninput="autoResizeTextarea(this)"></textarea>
+
+            <button type="submit" id="send-btn" class="send-btn">
+              <i class="fa-solid fa-paper-plane"></i>
+            </button>
+          </div>
+        </form>
+        
+        <div class="input-footer-note">
+          <span><i class="fa-solid fa-shield-halved"></i> Powered by VinBus MCP Server & ReAct Reasoning Architecture</span>
+        </div>
+      </footer>
+    </main>
+
+    <!-- OBSERVABILITY WATERFALL TRACE MODAL -->
+    <div id="trace-modal" class="modal-overlay hidden" onclick="closeModalOnBackdrop(event)">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fa-solid fa-chart-waterfall"></i>
+            <h3>Observability Waterfall Trace Log</h3>
+          </div>
+          <button class="close-modal-btn" onclick="toggleTraceModal()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-desc">Nhật ký truy vết quy trình suy luận ReAct Loop (Thought -> Action Tool -> Observation -> Final Answer):</p>
+          <div id="trace-content" class="trace-json-container">
+            <pre><code class="language-json" id="trace-json-code">// Chưa có dữ liệu trace log. Hãy thực hiện một câu hỏi!</code></pre>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="action-btn outline-btn" onclick="copyTraceJson()">
+            <i class="fa-solid fa-copy"></i> Sao Chép Trace JSON
+          </button>
+          <button class="action-btn primary-btn" onclick="toggleTraceModal()">Đóng</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
